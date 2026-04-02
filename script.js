@@ -37,8 +37,6 @@
   const lockTime = $('#lockTime');
   const lockDate = $('#lockDate');
   const cardTrack = $('#cardTrack');
-  const cardIndicator = $('#cardIndicator');
-  const pickerBack = $('#pickerBack');
   const cardCarousel = $('#cardCarousel');
   const wechatRowMsg = $('#wechatRowMsg');
   const wechatXiaoyueRow = $('#wechatXiaoyueRow');
@@ -177,6 +175,7 @@
     // Make the phone shape clickable
     document.querySelector('.landing-phone-shape').addEventListener('click', (e) => {
       e.stopPropagation();
+      playPickup();
       pickupPhone();
     });
   }
@@ -217,29 +216,14 @@
   // --- Render Card Carousel ---
   function renderCards() {
     cardTrack.innerHTML = '';
-    cardIndicator.innerHTML = '';
 
     episodes.forEach((ep, index) => {
       // Card
       const card = document.createElement('div');
       card.className = 'ep-card' + (index === activeCardIndex ? ' active' : '');
       card.dataset.index = index;
-      const num = index + 1;
-      card.innerHTML = `
-        <div class="ep-card-color" style="background:${ep.color}">
-          <span class="ep-card-num">${num}</span>
-        </div>
-        <div class="ep-card-info">
-          <div class="ep-card-title">${ep.title}</div>
-          <div class="ep-card-preview">${ep.preview}</div>
-        </div>
-      `;
+      card.innerHTML = `<span class="ep-card-title">${ep.title}</span>`;
       cardTrack.appendChild(card);
-
-      // Indicator dot
-      const dot = document.createElement('div');
-      dot.className = 'card-dot' + (index === activeCardIndex ? ' active' : '');
-      cardIndicator.appendChild(dot);
     });
 
     updateCarousel(activeCardIndex, false);
@@ -266,9 +250,7 @@
 
     // Update active states
     const cards = cardTrack.querySelectorAll('.ep-card');
-    const dots = cardIndicator.querySelectorAll('.card-dot');
     cards.forEach((c, i) => c.classList.toggle('active', i === activeCardIndex));
-    dots.forEach((d, i) => d.classList.toggle('active', i === activeCardIndex));
   }
 
   // --- Carousel Touch/Mouse Drag ---
@@ -300,8 +282,10 @@
       const dx = currentX - startX;
       const threshold = 40;
       if (dx < -threshold && activeCardIndex < episodes.length - 1) {
+        playCardSwipe();
         updateCarousel(activeCardIndex + 1);
       } else if (dx > threshold && activeCardIndex > 0) {
+        playCardSwipe();
         updateCarousel(activeCardIndex - 1);
       } else {
         updateCarousel(activeCardIndex);
@@ -327,12 +311,16 @@
       const index = parseInt(card.dataset.index);
       if (index !== activeCardIndex) {
         // Tap non-active card: navigate to it
+        playCardSwipe();
         updateCarousel(index);
       } else {
         // Tap active card: select episode and enter wechat
         selectedEpisode = episodes[index];
         if (selectedEpisode) {
-          wechatRowMsg.textContent = selectedEpisode.preview;
+          playCardSelect();
+          if (selectedEpisode.preview) {
+            wechatRowMsg.textContent = selectedEpisode.preview;
+          }
           navigateTo('wechat');
         }
       }
@@ -407,11 +395,11 @@
         break;
 
       case 'homescreen->chatlist':
-        // Hide hint boxes
+        // Hide hint boxes immediately
         const h1 = document.getElementById('wechatHint1');
         const h2 = document.getElementById('wechatHint2');
-        if (h1) h1.classList.remove('show');
-        if (h2) h2.classList.remove('show');
+        if (h1) { h1.classList.remove('show'); h1.style.display = 'none'; }
+        if (h2) { h2.classList.remove('show'); h2.style.display = 'none'; }
         renderCards();
         // Show wechat view underneath first
         views.wechat.style.display = 'flex';
@@ -544,8 +532,10 @@
         // First tap: wake up (show lock screen content)
         views.lockscreen.classList.remove('screen-off');
         statusBar.style.opacity = '1';
+        playScreenOn();
       } else {
         // Second tap: unlock to homescreen
+        playUnlock();
         navigateTo('homescreen');
       }
     });
@@ -556,9 +546,11 @@
       if (!icon) return;
 
       if (icon.dataset.app === 'wechat') {
+        playTap();
         navigateTo('chatlist');
       } else {
         // Icon shake only
+        playTap();
         const img = icon.querySelector('.app-icon-img');
         if (img) {
           img.classList.add('icon-shake');
@@ -567,14 +559,10 @@
       }
     });
 
-    // Picker back -> homescreen
-    pickerBack.addEventListener('click', () => {
-      navigateTo('homescreen');
-    });
-
     // WeChat: tap 小越 -> reading
     wechatXiaoyueRow.addEventListener('click', () => {
       if (selectedEpisode) {
+        playTap();
         renderReading(selectedEpisode);
         navigateTo('reading');
       }
@@ -642,6 +630,123 @@
     addSwipeUpHome(views.chatlist, 'homescreen');
     addSwipeUpHome(views.wechat, 'homescreen');
     addSwipeUpHome(views.reading, 'homescreen');
+  }
+
+  // --- Sound Effects (Web Audio API) ---
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  // 轻触音 - 短促清脆
+  function playTap() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.08);
+  }
+
+  // 解锁音 - 上升滑音
+  function playUnlock() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  }
+
+  // 亮屏音 - 微弱敲击
+  function playScreenOn() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.03);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+  }
+
+  // 捡起手机 - 低沉的拾取音
+  function playPickup() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc2.type = 'sine';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.3);
+    osc2.frequency.setValueAtTime(300, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc2.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+    osc2.stop(ctx.currentTime + 0.4);
+  }
+
+  // 选卡确认音 - 双音阶
+  function playCardSelect() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523, ctx.currentTime);        // C5
+    osc.frequency.setValueAtTime(659, ctx.currentTime + 0.08); // E5
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  }
+
+  // 滑动切卡音 - 轻微气流感
+  function playCardSwipe() {
+    const ctx = getAudioCtx();
+    const bufferSize = ctx.sampleRate * 0.06;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 3000;
+    filter.Q.value = 0.5;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.03;
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(ctx.currentTime);
   }
 
   // --- Util ---
