@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "siteName": "捡手机文学",
+    "phoneOwner": "高超",
+    "tagline": "你捡到了高超的手机..."
+  },
+  "episodes": [
+    { "id": "ep01", "title": "痛觉互换", "preview": "高超！！！你别掐我！！！", "color": "#ff6b6b" },
+    { "id": "ep02", "title": "第2集", "preview": "占位预览文案", "color": "#ffa94d" },
+    { "id": "ep03", "title": "第3集", "preview": "占位预览文案", "color": "#ffd43b" },
+    { "id": "ep04", "title": "第4集", "preview": "占位预览文案", "color": "#69db7c" },
+    { "id": "ep05", "title": "第5集", "preview": "占位预览文案", "color": "#38d9a9" },
+    { "id": "ep06", "title": "第6集", "preview": "占位预览文案", "color": "#3bc9db" },
+    { "id": "ep07", "title": "第7集", "preview": "占位预览文案", "color": "#4dabf7" },
+    { "id": "ep08", "title": "第8集", "preview": "占位预览文案", "color": "#748ffc" },
+    { "id": "ep09", "title": "第9集", "preview": "占位预览文案", "color": "#9775fa" },
+    { "id": "ep10", "title": "第10集", "preview": "占位预览文案", "color": "#da77f2" },
+    { "id": "ep11", "title": "第11集", "preview": "占位预览文案", "color": "#f783ac" },
+    { "id": "ep12", "title": "第12集", "preview": "占位预览文案", "color": "#ff6b6b" },
+    { "id": "ep13", "title": "第13集", "preview": "占位预览文案", "color": "#ffa94d" },
+    { "id": "ep14", "title": "第14集", "preview": "占位预览文案", "color": "#ffd43b" },
+    { "id": "ep15", "title": "第15集", "preview": "占位预览文案", "color": "#69db7c" },
+    { "id": "ep16", "title": "第16集", "preview": "占位预览文案", "color": "#38d9a9" },
+    { "id": "ep17", "title": "第17集", "preview": "占位预览文案", "color": "#3bc9db" },
+    { "id": "ep18", "title": "第18集", "preview": "占位预览文案", "color": "#4dabf7" },
+    { "id": "ep19", "title": "第19集", "preview": "占位预览文案", "color": "#748ffc" },
+    { "id": "ep20", "title": "第20集", "preview": "占位预览文案", "color": "#9775fa" },
+    { "id": "ep21", "title": "第21集", "preview": "占位预览文案", "color": "#da77f2" },
+    { "id": "ep22", "title": "第22集", "preview": "占位预览文案", "color": "#f783ac" }
+  ]
+}

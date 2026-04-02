@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>捡手机文学 - 你捡到了一部手机</title>
+  <meta name="description" content="你在路边捡到了一部手机，里面全是搞笑聊天记录...">
+  <meta property="og:title" content="捡手机文学">
+  <meta property="og:description" content="你在路边捡到了一部手机，里面全是搞笑聊天记录...">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景（桌面端手机后面的深色背景） -->
+  <div class="desktop-bg"></div>
+  <div class="street-dust" id="streetDust"></div>
+
+  <!-- View 1: 着陆页（全屏，手机框外面） -->
+  <div class="landing-overlay active" id="landingOverlay">
+    <div class="landing-scene" id="landingScene">
+      <div class="particles" id="particles"></div>
+      <div class="landing-phone-glow"></div>
+      <div class="landing-phone-shape">
+        <div class="landing-phone-screen-hint">
+          <div class="landing-notification">
+            <div class="landing-notif-icon">💬</div>
+            <div class="landing-notif-text">微信 · 未读消息</div>
+          </div>
+        </div>
+      </div>
+      <!-- 对话气泡 -->
+      <div class="landing-dialogue" id="landingDialogue">诶？这是谁的手机</div>
+      <!-- 叙事弹窗 -->
+      <div class="landing-narration" id="landingNarration">你在路边发现了一部手机</div>
+      <div class="landing-tap-hint" id="landingHint">↑ 点击手机拾起</div>
+    </div>
+  </div>
+
+  <!-- 手机外框（初始隐藏，捡起来后出现） -->
+  <div class="phone-frame hidden" id="phoneFrame">
+    <!-- 刘海 -->
+    <div class="notch"></div>
+    <!-- 状态栏 -->
+    <div class="status-bar" id="statusBar">
+      <span class="status-time" id="statusTime">9:41</span>
+      <div class="status-icons">
+        <!-- 信号格 -->
+        <svg class="status-icon" viewBox="0 0 17 12" width="14" height="10">
+          <rect fill="currentColor" x="0" y="9" width="3" height="3" rx="0.5"/>
+          <rect fill="currentColor" x="4.5" y="6" width="3" height="6" rx="0.5"/>
+          <rect fill="currentColor" x="9" y="3" width="3" height="9" rx="0.5"/>
+          <rect fill="currentColor" x="13.5" y="0" width="3" height="12" rx="0.5"/>
+        </svg>
+        <!-- 电池 -->
+        <svg class="status-icon" viewBox="0 0 25 12" width="22" height="10">
+          <rect x="0" y="0.5" width="22" height="11" rx="3" ry="3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="23" y="3.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.4"/>
+          <rect x="1.5" y="2" width="19" height="8" rx="2" fill="currentColor"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 手机屏幕内容区 -->
+    <div class="phone-screen" id="phoneScreen">
+
+      <!-- View 2: 锁屏 -->
+      <div class="view view-lockscreen active" id="viewLockscreen">
+        <div class="lockscreen-bg"></div>
+        <div class="screen-off-hint">点击屏幕唤醒</div>
+        <div class="lockscreen-content">
+          <div class="lock-date" id="lockDate">1月1日周一</div>
+          <div class="lock-time" id="lockTime"><span class="lock-time-h">9</span><span class="lock-time-colon">:</span><span class="lock-time-m">41</span></div>
+          <div class="lock-notifications">
+            <div class="lock-notif">
+              <div class="lock-notif-icon-wrap">
+                <img class="lock-notif-wechat-icon" src="assets/icons/wechat.png" alt="微信">
+              </div>
+              <div class="lock-notif-body">
+                <span class="lock-notif-app">微信</span>
+                <span class="lock-notif-sub">1个通知</span>
+              </div>
+              <span class="lock-notif-time">现在</span>
+            </div>
+          </div>
+          <div class="lock-bottom">
+            <div class="lock-bottom-btn">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#fff" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+            </div>
+            <div class="lock-bottom-btn">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#fff" d="M12 15.2l3.2-2.8L12 9.6 8.8 12.4l3.2 2.8zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+            </div>
+          </div>
+          <div class="lock-home-bar"></div>
+        </div>
+      </div>
+
+      <!-- View 3: 手机桌面 -->
+      <div class="view view-homescreen" id="viewHomescreen">
+        <div class="homescreen-bg"></div>
+        <div class="homescreen-content">
+          <div class="app-grid">
+            <div class="app-icon" data-app="wechat">
+              <img class="app-icon-img" src="assets/icons/wechat.png" alt="微信">
+              <div class="app-badge" id="wechatBadge" style="display:none;">1</div>
+              <span class="app-name">微信</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/photos.svg" alt="照片">
+              <span class="app-name">照片</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/camera.svg" alt="相机">
+              <span class="app-name">相机</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/settings.svg" alt="设置">
+              <span class="app-name">设置</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/music.svg" alt="音乐">
+              <span class="app-name">音乐</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/notes.svg" alt="备忘录">
+              <span class="app-name">备忘录</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/maps.svg" alt="地图">
+              <span class="app-name">地图</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/calendar.svg" alt="日历">
+              <span class="app-name">日历</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/appstore.svg" alt="App Store">
+              <span class="app-name">App Store</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/xiaohongshu.png" alt="小红书">
+              <span class="app-name">小红书</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/weibo.png" alt="微博">
+              <span class="app-name">微博</span>
+            </div>
+            <div class="app-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/weather.svg" alt="天气">
+              <span class="app-name">天气</span>
+            </div>
+          </div>
+          <!-- 搜索框 -->
+          <div class="home-search">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>搜索</span>
+          </div>
+          <!-- 底部 Dock -->
+          <div class="dock">
+            <div class="app-icon dock-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/phone.svg" alt="电话">
+            </div>
+            <div class="app-icon dock-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/safari.svg" alt="Safari">
+            </div>
+            <div class="app-icon dock-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/messages.svg" alt="信息">
+            </div>
+            <div class="app-icon dock-icon" data-app="other">
+              <img class="app-icon-img" src="assets/icons/camera.svg" alt="相机">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 微信提示对话框（phone-screen 层级，覆盖在所有 view 之上） -->
+      <div class="wechat-hint-box" id="wechatHint1">微信有消息诶</div>
+      <div class="wechat-hint-box" id="wechatHint2">要不点开看看？</div>
+
+      <!-- View 4: 卡片选集页 -->
+      <div class="view view-chatlist" id="viewChatlist">
+        <div class="picker-header">
+          <button class="picker-back" id="pickerBack">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span class="picker-title">选择一集</span>
+        </div>
+        <div class="card-carousel" id="cardCarousel">
+          <div class="card-track" id="cardTrack">
+            <!-- 动态生成卡片 -->
+          </div>
+        </div>
+        <div class="card-indicator" id="cardIndicator"></div>
+      </div>
+
+      <!-- View 5: 微信主界面 -->
+      <div class="view view-wechat" id="viewWechat">
+        <div class="wechat-header">
+          <span class="wechat-title">微信</span>
+          <div class="wechat-header-actions">
+            <svg viewBox="0 0 24 24" width="15" height="15">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+        </div>
+        <div class="wechat-search-wrap">
+          <div class="wechat-search">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" opacity="0.4" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>搜索</span>
+          </div>
+        </div>
+        <div class="wechat-main-list" id="wechatMainList">
+          <div class="chat-item chat-pinned" id="wechatXiaoyueRow">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar">
+                <img src="gaoyue.PNG" alt="小越">
+              </div>
+              <span class="chat-unread">1</span>
+            </div>
+            <div class="chat-info">
+              <div class="chat-info-top">
+                <span class="chat-name">小越</span>
+                <span class="chat-time">1分钟前</span>
+              </div>
+              <div class="chat-info-bottom">
+                <span class="chat-last-msg" id="wechatRowMsg">高超！！！你别掐我！！！</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wechat-tabs">
+          <img src="wechatbottom.jpg" alt="" class="wechat-tabs-img" draggable="false">
+        </div>
+      </div>
+
+      <!-- View 6: 阅读页 -->
+      <div class="view view-reading" id="viewReading">
+        <div class="reading-header">
+          <button class="reading-back" id="readingBack">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span class="reading-title" id="readingTitle">小越</span>
+          <button class="reading-more">⋯</button>
+        </div>
+        <div class="reading-content" id="readingContent">
+          <!-- 动态加载截图 -->
+        </div>
+        <div class="reading-footer" id="readingFooter" style="display:none;">
+          <div class="reading-end-mark">—— 本集完 ——</div>
+          <button class="reading-next-btn" id="readingNextBtn">下一集 →</button>
+        </div>
+      </div>
+
+    </div><!-- .phone-screen -->
+  </div><!-- .phone-frame -->
+
+  <!-- 微信提示音 -->
+  <audio id="wechatSound" preload="auto" src="assets/wechat.wav"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

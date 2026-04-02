@@ -1,0 +1,1253 @@
+/* ============================================
+   捡手机文学 - 沉浸式手机模拟样式
+   ============================================ */
+
+/* --- Reset & Base --- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --wechat-green: #07C160;
+  --wechat-bg: #ededed;
+  --wechat-header: #ededed;
+  --phone-width: 375px;
+  --phone-radius: 44px;
+  --phone-bezel: 8px;
+  --notch-width: 126px;
+  --notch-height: 36px;
+  --status-bar-h: 54px;
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #000;
+}
+
+/* --- Desktop Background: 夜晚街道氛围 --- */
+.desktop-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: #0a0a12;
+  overflow: hidden;
+}
+
+/* 地面纹理 */
+.desktop-bg::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 60%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(30,25,20,0.5) 30%, rgba(40,32,24,0.7) 100%);
+}
+
+/* 路灯暖光效果 - 更亮 */
+.desktop-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    /* 主路灯光晕 - 大面积柔和暖光 */
+    radial-gradient(ellipse 500px 400px at 50% 10%, rgba(255,200,120,0.18) 0%, transparent 100%),
+    /* 地面中心暖光 - 手机附近 */
+    radial-gradient(ellipse 500px 300px at 50% 55%, rgba(255,185,90,0.1) 0%, transparent 100%),
+    /* 左侧远处暖光 */
+    radial-gradient(circle 250px at 10% 40%, rgba(255,180,100,0.06) 0%, transparent 100%),
+    /* 右侧远处冷光 */
+    radial-gradient(circle 200px at 90% 35%, rgba(120,160,220,0.05) 0%, transparent 100%),
+    /* 整体微弱暖调提亮 */
+    radial-gradient(ellipse 800px 600px at 50% 50%, rgba(255,200,140,0.04) 0%, transparent 100%);
+  animation: streetlightFlicker 6s ease-in-out infinite alternate;
+}
+
+/* 路灯微微闪烁 */
+@keyframes streetlightFlicker {
+  0%   { opacity: 0.9; }
+  30%  { opacity: 1; }
+  50%  { opacity: 0.95; }
+  70%  { opacity: 1; }
+  100% { opacity: 0.92; }
+}
+
+/* 街道环境光粒子 */
+.street-dust {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.street-dust-particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: rgba(255, 210, 140, 0.25);
+  border-radius: 50%;
+  animation: dustFloat linear infinite;
+}
+@keyframes dustFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  15% { opacity: 0.5; }
+  85% { opacity: 0.3; }
+  100% { transform: translateY(-150px) translateX(40px); opacity: 0; }
+}
+
+/* --- Phone Frame --- */
+.phone-frame {
+  position: fixed; z-index: 10;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  /* Height-first: fit within viewport, then derive width from aspect ratio */
+  height: min(calc(100vh - 40px), calc(100dvh - 40px), 812px);
+  aspect-ratio: 9 / 18;
+  max-width: var(--phone-width);
+  border-radius: var(--phone-radius);
+  border: var(--phone-bezel) solid #1c1c1e;
+  background: #000;
+  box-shadow:
+    0 0 0 2px #333,
+    0 20px 60px rgba(0,0,0,0.7),
+    0 40px 100px rgba(255,200,120,0.06),
+    0 0 80px rgba(255,180,100,0.03);
+  overflow: hidden;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.phone-frame.hidden {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.85);
+  pointer-events: none;
+}
+.phone-frame.entering {
+  animation: phoneEnter 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+@keyframes phoneEnter {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7) translateY(40px); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); }
+}
+
+/* --- Notch (Dynamic Island) --- */
+.notch {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--notch-width);
+  height: var(--notch-height);
+  background: #000;
+  border-radius: 18px;
+  z-index: 100;
+}
+
+/* --- Status Bar --- */
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: var(--status-bar-h);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px 0;
+  z-index: 90;
+  color: #fff;
+  font-size: 14px; font-weight: 600;
+  pointer-events: none;
+  transition: color 0.3s, opacity 0.4s ease;
+}
+.status-bar.dark-text { color: #000; }
+.status-icons { display: flex; gap: 5px; align-items: center; }
+.status-icon { opacity: 0.9; display: block; }
+
+/* --- Phone Screen (contains all views) --- */
+.phone-screen {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  container-type: size;
+  container-name: phone;
+}
+
+/* --- Views --- */
+.view {
+  position: absolute; inset: 0;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.view.active {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+}
+
+/* ============================================
+   View 1: Landing Page (全屏浮层，在手机框之上)
+   ============================================ */
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, #08080e 0%, #0c0c14 40%, #0a0910 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+.landing-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.view-landing {
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+/* Particles */
+.particles {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.particle {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  animation: particleDrift linear infinite;
+}
+@keyframes particleDrift {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-200px) translateX(30px); opacity: 0; }
+}
+
+/* Phone on ground */
+.landing-phone-glow {
+  position: absolute;
+  width: 120px; height: 200px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(255,200,120,0.15) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: phoneGlow 2s ease-in-out infinite alternate;
+}
+@keyframes phoneGlow {
+  0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.landing-phone-shape {
+  width: 80px;
+  height: 150px;
+  border: 2px solid rgba(255,220,160,0.12);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(20,18,15,0.9), rgba(10,10,12,0.95));
+  position: relative;
+  transform: perspective(500px) rotateX(20deg);
+  box-shadow: 0 0 30px rgba(255,190,100,0.1), 0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.8s ease, box-shadow 0.3s ease;
+}
+.landing-phone-shape.visible {
+  opacity: 1;
+  animation: phoneBob 3s ease-in-out infinite, phoneVibrate 4s ease-in-out infinite;
+}
+.landing-phone-shape:hover {
+  box-shadow: 0 0 50px rgba(255,190,100,0.25), 0 10px 40px rgba(0,0,0,0.5);
+}
+@keyframes phoneBob {
+  0%, 100% { transform: perspective(500px) rotateX(20deg) translateY(0); }
+  50% { transform: perspective(500px) rotateX(20deg) translateY(-5px); }
+}
+@keyframes phoneVibrate {
+  0%, 85%, 100% { transform: perspective(500px) rotateX(20deg) translateX(0); }
+  87% { transform: perspective(500px) rotateX(20deg) translateX(-2px); }
+  89% { transform: perspective(500px) rotateX(20deg) translateX(2px); }
+  91% { transform: perspective(500px) rotateX(20deg) translateX(-2px); }
+  93% { transform: perspective(500px) rotateX(20deg) translateX(1px); }
+  95% { transform: perspective(500px) rotateX(20deg) translateX(0); }
+}
+
+.landing-phone-screen-hint {
+  position: absolute; inset: 4px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.landing-notification {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  transform: scale(0.6);
+}
+.landing-notif-icon { font-size: 10px; }
+.landing-notif-text { font-size: 5px; color: rgba(255,255,255,0.7); white-space: nowrap; }
+
+.landing-text {
+  display: none;
+}
+
+/* 对话气泡 */
+.landing-dialogue {
+  margin-top: 30px;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  border-radius: 16px 16px 16px 4px;
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+  transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  position: relative;
+}
+.landing-dialogue.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* 叙事弹窗 */
+.landing-narration {
+  margin-top: 20px;
+  color: rgba(255,220,180,0.7);
+  font-size: 14px;
+  letter-spacing: 3px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.6s ease;
+}
+.landing-narration.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-btn {
+  display: none;
+}
+
+.landing-tap-hint {
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(255,220,180,0.7);
+  letter-spacing: 3px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.landing-tap-hint.visible {
+  opacity: 1;
+  animation: hintBreath 3s ease-in-out infinite;
+}
+@keyframes hintBreath {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+/* ============================================
+   View 2: Lock Screen
+   ============================================ */
+.view-lockscreen {
+  background: #000;
+}
+/* Screen off: black, everything hidden */
+.view-lockscreen.screen-off .lockscreen-bg,
+.view-lockscreen.screen-off .lockscreen-content {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.view-lockscreen.screen-off ~ .status-bar,
+.phone-screen:has(.view-lockscreen.screen-off.active) ~ .status-bar {
+  opacity: 0;
+}
+.view-lockscreen .lockscreen-bg,
+.view-lockscreen .lockscreen-content {
+  transition: opacity 0.4s ease;
+}
+
+/* Screen off tap hint */
+.screen-off-hint {
+  position: absolute;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  letter-spacing: 2px;
+  z-index: 5;
+  animation: hintBreath 3s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+.view-lockscreen:not(.screen-off) .screen-off-hint {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+  display: none;
+}
+.lockscreen-bg {
+  position: absolute; inset: 0;
+  background: url('wallpaper.PNG') center center / cover no-repeat;
+}
+.lockscreen-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.15);
+}
+
+.lockscreen-content {
+  position: relative; z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding-top: calc(var(--status-bar-h) + 14px);
+}
+
+.lock-icon {
+  font-size: 14px;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.lock-time {
+  font-size: 80px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0px;
+  line-height: 1;
+  font-feature-settings: 'tnum';
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lock-time-colon {
+  position: relative;
+  top: -6px;
+  margin: 0 1px;
+}
+
+.lock-date {
+  font-size: 15px;
+  color: #fff;
+  margin-bottom: 6px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.lock-notifications {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 93%;
+}
+
+.lock-notif {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 14px;
+}
+
+.lock-notif-icon-wrap {
+  flex-shrink: 0;
+}
+img.lock-notif-wechat-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.lock-notif-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.lock-notif-app { font-size: 13px; color: #fff; font-weight: 500; }
+.lock-notif-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
+.lock-notif-time { font-size: 12px; color: rgba(255,255,255,0.45); flex-shrink: 0; }
+
+.lock-bottom {
+  position: absolute;
+  bottom: 30px;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.lock-bottom-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.lock-bottom-btn:active {
+  background: rgba(255,255,255,0.3);
+}
+.lock-home-bar {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: rgba(255,255,255,0.75);
+  border-radius: 2px;
+}
+}
+
+/* ============================================
+   View 3: Home Screen
+   ============================================ */
+.view-homescreen {
+  background: #000;
+}
+.homescreen-bg {
+  position: absolute; inset: 0;
+  background: url('wallpaper.PNG') center center / cover no-repeat;
+  filter: blur(18px) brightness(0.75) saturate(1.2);
+  transform: scale(1.15);
+}
+.homescreen-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.15);
+}
+
+.homescreen-content {
+  position: relative; z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: calc(var(--status-bar-h) + 2cqh);
+  overflow: hidden;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.5cqh 0;
+  padding: 1cqh 3cqw;
+  flex: 1;
+  align-content: start;
+}
+
+.app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5cqh;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-icon:active .app-icon-img {
+  transform: scale(0.9);
+}
+
+.icon-shake {
+  animation: iconShake 0.4s ease-in-out !important;
+}
+@keyframes iconShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.app-icon-img {
+  width: 18cqw; height: 18cqw;
+  border-radius: 24%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  background: none;
+  transition: transform 0.15s ease;
+  object-fit: cover;
+}
+
+/* img 类型的图标 */
+img.app-icon-img {
+  display: block;
+  background: none;
+}
+
+.app-wechat {
+  background: linear-gradient(135deg, #07C160, #06AD56) !important;
+}
+
+
+.app-name {
+  font-size: 3.5cqw;
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+  max-width: 18cqw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-badge {
+  position: absolute;
+  top: -1cqw; right: 0cqw;
+  min-width: 7cqw; height: 7cqw;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 4cqw;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 1cqw;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Search bar */
+.home-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  margin: 1cqh auto;
+  padding: 0.8cqh 3cqw;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 10cqw;
+  color: rgba(255,255,255,0.5);
+  font-size: 3.5cqw;
+  flex-shrink: 0;
+}
+.home-search svg {
+  flex-shrink: 0;
+}
+
+/* Dock */
+.dock {
+  display: flex;
+  justify-content: center;
+  gap: 5cqw;
+  padding: 2.5cqh 4cqw;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 8cqw;
+  margin: 0 3cqw 2cqh;
+  flex-shrink: 0;
+}
+.dock-icon .app-name { display: none; }
+
+/* WeChat Hint Dialogue Boxes (same style as landing dialogue) */
+.wechat-hint-box {
+  position: absolute;
+  left: 6%;
+  transform: translateY(10px) scale(0.9);
+  padding: 10px 20px;
+  width: 55%;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px 16px 16px 4px;
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  letter-spacing: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+#wechatHint1 {
+  top: 55%;
+}
+#wechatHint2 {
+  top: calc(55% + 58px);
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  border-radius: 16px 16px 16px 4px;
+}
+.wechat-hint-box.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Toast */
+.toast {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ============================================
+   View 4: Card Carousel Episode Picker
+   ============================================ */
+.view-chatlist {
+  background: rgba(10, 10, 20, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  z-index: 2;
+}
+.picker-header,
+.card-carousel,
+.card-indicator {
+  position: relative;
+  z-index: 1;
+}
+
+.picker-header {
+  height: var(--status-bar-h);
+  padding-top: calc(var(--status-bar-h) - 30px);
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  padding-right: 16px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+.picker-back {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.picker-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.card-carousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  touch-action: pan-y;
+}
+
+.card-track {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 calc(50% - 55px);
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+}
+.card-track.dragging {
+  transition: none;
+}
+
+.ep-card {
+  flex-shrink: 0;
+  width: 110px;
+  height: 160px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transform: scale(0.85);
+  opacity: 0.5;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  -webkit-tap-highlight-color: transparent;
+}
+.ep-card.active {
+  transform: scale(1);
+  opacity: 1;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+
+.ep-card-color {
+  height: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.ep-card-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.ep-card-info {
+  flex: 1;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+.ep-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ep-card-preview {
+  font-size: 9px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px 0 24px;
+  flex-shrink: 0;
+}
+.card-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transition: background 0.3s, transform 0.3s;
+}
+.card-dot.active {
+  background: rgba(255,255,255,0.8);
+  transform: scale(1.3);
+}
+
+/* ============================================
+   View 5: WeChat Main Interface
+   ============================================ */
+.view-wechat {
+  background: var(--wechat-bg);
+}
+
+.wechat-header {
+  height: calc(var(--status-bar-h) + 26px);
+  padding-top: var(--status-bar-h);
+  background: var(--wechat-header);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 16px;
+  padding-right: 16px;
+  flex-shrink: 0;
+  position: relative;
+}
+.wechat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000;
+}
+.wechat-header-actions {
+  position: absolute;
+  right: 16px;
+  display: flex; gap: 18px;
+  color: #000;
+}
+
+.wechat-search-wrap {
+  background: var(--wechat-header);
+  padding: 4px 0 5px;
+  flex-shrink: 0;
+}
+.wechat-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 12px;
+  padding: 4px 0;
+  background: #fff;
+  border-radius: 6px;
+  color: #999;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.wechat-search svg {
+  width: 18px;
+  height: 18px;
+}
+
+.wechat-main-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  cursor: pointer;
+  border-bottom: 0.5px solid rgba(0,0,0,0.05);
+  transition: background 0.15s;
+  background: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-item:active {
+  background: rgba(0,0,0,0.05);
+}
+.chat-pinned {
+  background: #ededed;
+}
+.chat-pinned:active {
+  background: #e5e5e5;
+}
+
+.chat-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.chat-avatar-wrap .chat-unread {
+  position: absolute;
+  top: -4px; right: -4px;
+}
+.chat-avatar {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  overflow: hidden;
+}
+.chat-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.chat-info {
+  flex: 1;
+  min-width: 0;
+}
+.chat-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.chat-name {
+  font-size: 13px;
+  color: #000;
+  font-weight: 500;
+}
+.chat-time {
+  font-size: 11px;
+  color: #999;
+  flex-shrink: 0;
+}
+.chat-info-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-last-msg {
+  font-size: 11px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.chat-unread {
+  min-width: 14px; height: 14px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.wechat-tabs {
+  background: var(--wechat-header);
+  border-top: 0.5px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.wechat-tabs-img {
+  display: block;
+  width: 105%;
+  height: auto;
+  margin-left: -2%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ============================================
+   View 6: Reading View
+   ============================================ */
+.view-reading {
+  background: var(--wechat-bg);
+}
+
+.reading-header {
+  height: calc(var(--status-bar-h) + 34px);
+  padding-top: var(--status-bar-h);
+  background: var(--wechat-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 8px;
+  padding-right: 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.reading-back {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #000;
+  display: flex;
+  align-items: center;
+}
+
+.reading-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.reading-more {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #000;
+  padding: 8px;
+}
+
+.reading-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--wechat-bg);
+}
+
+.reading-content img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.reading-content .img-placeholder {
+  width: 100%;
+  aspect-ratio: 1179 / 2101;
+  background: linear-gradient(180deg, #f0f0f0, #e0e0e0);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.reading-footer {
+  background: var(--wechat-bg);
+  padding: 30px 20px 40px;
+  text-align: center;
+}
+
+.reading-end-mark {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.reading-next-btn {
+  padding: 12px 32px;
+  font-size: 15px;
+  color: #fff;
+  background: var(--wechat-green);
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.reading-next-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+/* ============================================
+   Transitions
+   ============================================ */
+/* Landing: phone pickup animation */
+.landing-scene.picking-up .landing-phone-shape {
+  animation: phonePickup 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes phonePickup {
+  0% {
+    transform: perspective(500px) rotateX(20deg);
+  }
+  40% {
+    transform: perspective(500px) rotateX(0deg) scale(1.5) translateY(-30px);
+  }
+  100% {
+    transform: perspective(500px) rotateX(0deg) scale(6) translateY(-10px);
+    opacity: 0;
+  }
+}
+.landing-scene.picking-up .landing-text,
+.landing-scene.picking-up .landing-btn,
+.landing-scene.picking-up .landing-phone-glow {
+  animation: fadeOutQuick 0.3s ease forwards;
+}
+@keyframes fadeOutQuick {
+  to { opacity: 0; }
+}
+
+.view-lockscreen.enter-unlock {
+  animation: slideUp 0.4s ease forwards;
+}
+@keyframes slideUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+/* Swipe up to go home animation */
+.slide-down-out {
+  animation: slideDownOut 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes slideDownOut {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(30px) scale(0.9); opacity: 0; }
+}
+
+.view-chatlist.slide-in,
+.view-wechat.slide-in {
+  animation: slideInRight 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+@keyframes slideInRight {
+  0% { transform: translateX(100%); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.view-reading.slide-in {
+  animation: slideInRight 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+.view-reading.slide-out {
+  animation: slideOutRight 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+@keyframes slideOutRight {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+/* ============================================
+   Mobile Responsive
+   ============================================ */
+@media (max-width: 480px) {
+  .desktop-bg { display: none; }
+
+  .phone-frame {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    top: 0; left: 0;
+    transform: none;
+    aspect-ratio: auto;
+  }
+
+  .notch { display: none; }
+
+  .status-bar {
+    padding-top: env(safe-area-inset-top, 0);
+    height: calc(env(safe-area-inset-top, 0) + 44px);
+  }
+
+  :root {
+    --status-bar-h: calc(env(safe-area-inset-top, 20px) + 24px);
+  }
+}
+
+/* Tablet/medium screens */
+@media (min-width: 481px) and (max-width: 768px) {
+  :root { --phone-width: 380px; }
+}
+
+/* Large desktop */
+@media (min-width: 769px) {
+  :root { --phone-width: 390px; }
+}
+
+/* --- Utility --- */
+/* Note: .phone-frame.hidden uses opacity, not display:none */
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
